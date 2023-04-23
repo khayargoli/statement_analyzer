@@ -10,7 +10,7 @@ pd.pandas.set_option("display.max_columns", None)
 
 uploaded_file = st.file_uploader("Choose a file")
 if uploaded_file is not None:
-    dfs = tb.read_pdf("accmine.pdf", pages='all', multiple_tables = True)
+    dfs = tb.read_pdf(uploaded_file, pages='all', multiple_tables = True)
     df = pd.concat(dfs)
     df = df.dropna()
 
