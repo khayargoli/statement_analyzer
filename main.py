@@ -46,12 +46,12 @@ if uploaded_file is not None:
    # date_sums = df.groupby(["Transaction Date"] , as_index=False).sum()
    # st.dataframe(date_sums.describe())
     
-    st.markdown("TOP 5 DAYS WHERE YOU SPENT THE MOST")
-    st.write(df_trans.nlargest(5, 'Withdraw'))
+    st.markdown("TOP 10 DAYS WHERE YOU SPENT THE MOST")
+    st.write(df_trans.nlargest(10, 'Withdraw'))
     # st.bar_chart(data=df_trans.nlargest(5, 'Withdraw'))
     
-    st.markdown("TOP 5 DAYS WHERE YOU EARNED THE MOST")
-    st.write(df_trans.nlargest(5, 'Deposit'))
+    st.markdown("TOP 10 DAYS WHERE YOU EARNED THE MOST")
+    st.write(df_trans.nlargest(10, 'Deposit'))
    # st.bar_chart(data=df_trans.nlargest(5, 'Deposit'))
     
     st.markdown("MONTHLY SPENDING")
