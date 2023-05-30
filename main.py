@@ -56,8 +56,8 @@ if uploaded_file is not None:
     
     st.markdown("MONTHLY SPENDING")
     df2=df_trans.groupby(pd.Grouper(key='Transaction Date', freq='1M')).sum()
-    #st.write(df2)
-    st.bar_chart(data=df2)
+    st.write(df2)
+    #st.bar_chart(data=df2)
 
     st.markdown("EARN VS SPENDING WITH RESPECT TO DAYS")
     df3=df[['Day', 'Withdraw', 'Deposit']].groupby('Day').sum()
