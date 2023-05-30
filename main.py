@@ -42,9 +42,9 @@ if uploaded_file is not None:
     df_trans = df.groupby(["Transaction Date"] , as_index=False).sum()
     
     
-    st.markdown("Statistical Overview")
-    date_sums = df.groupby(["Transaction Date"] , as_index=False).sum()
-    st.dataframe(date_sums.describe())
+  #  st.markdown("Statistical Overview")
+   # date_sums = df.groupby(["Transaction Date"] , as_index=False).sum()
+   # st.dataframe(date_sums.describe())
     
     st.markdown("TOP 5 DAYS WHERE YOU SPENT THE MOST")
     st.write(df_trans.nlargest(5, 'Withdraw'))
@@ -55,7 +55,7 @@ if uploaded_file is not None:
    # st.bar_chart(data=df_trans.nlargest(5, 'Deposit'))
     
     st.markdown("MONTHLY SPENDING")
-    df2=date_sums.groupby(pd.Grouper(key='Transaction Date', freq='1M')).sum()
+    df2=df_trans.groupby(pd.Grouper(key='Transaction Date', freq='1M')).sum()
     #st.write(df2)
     st.bar_chart(data=df2)
 
