@@ -37,30 +37,36 @@ if uploaded_file is not None:
     st.write(df.tail(1))
     df = df.drop(['S.N'], axis=1)
     df['Day'] = df['Transaction Date'].dt.day_name()
-    
-    
     df_trans = df.groupby(["Transaction Date"] , as_index=False).sum()
     
     
-  #  st.markdown("Statistical Overview")
-   # date_sums = df.groupby(["Transaction Date"] , as_index=False).sum()
-   # st.dataframe(date_sums.describe())
+    st.markdown("Statistical Overview")
+    date_sums = df.groupby(["Transaction Date"] , as_index=False).sum()
+    st.dataframe(date_sums.describe())
     
     st.markdown("TOP 10 DAYS WHERE YOU SPENT THE MOST")
     st.write(df_trans.nlargest(10, 'Withdraw'))
-    # st.bar_chart(data=df_trans.nlargest(5, 'Withdraw'))
+    df_spent = df_trans.nlargest(10, 'Withdraw').set_index('Transaction Date')['Withdraw']
+
+    st.bar_chart(data=df_spent)
     
     st.markdown("TOP 10 DAYS WHERE YOU EARNED THE MOST")
     st.write(df_trans.nlargest(10, 'Deposit'))
-   # st.bar_chart(data=df_trans.nlargest(5, 'Deposit'))
+    df_earned = df_trans.nlargest(10, 'Withdraw').set_index('Transaction Date')['Withdraw']
+    st.bar_chart(data=df_earned)
     
     st.markdown("MONTHLY SPENDING")
     df2=df_trans.groupby(pd.Grouper(key='Transaction Date', freq='1M')).sum()
     st.write(df2)
-    #st.bar_chart(data=df2)
+    st.bar_chart(data=df2)
+
+    st.markdown("MONTHLY AVG SPENDING")
+    df4=date_sums.groupby(pd.Grouper(key='Transaction Date', freq='1M')).mean()
+    st.write(df4)
+    st.bar_chart(data=df4)
 
     st.markdown("EARN VS SPENDING WITH RESPECT TO DAYS")
     df3=df[['Day', 'Withdraw', 'Deposit']].groupby('Day').sum()
-    #st.write(df3)
+    st.write(df3)
     st.bar_chart(data=df3)
     
