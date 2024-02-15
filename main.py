@@ -12,10 +12,11 @@ if uploaded_file is not None:
     dfs = tb.read_pdf(uploaded_file, pages='all', multiple_tables = True, columns=[27.0,68.0,272.0,357.5,397.0,474.5,553.0,631.0])
     df = pd.concat(dfs)
     df = df.dropna()
+    df = df.head(60)
 
     st.title('Statement Analysis')
     st.markdown("Record size:")
-    st.write(df.shape)
+    st.write(df)
 
     st.markdown("Anaylyzing statement from: " + df.head(1)['Transaction Date'].values[0].split(' ')[0] + " to " + df.tail(1)['Transaction Date'].values[0].split(' ')[0])
     
@@ -23,11 +24,11 @@ if uploaded_file is not None:
     df['Withdraw'] = df["Withdraw"].replace(',','',inplace=False, regex=True)
     df['Deposit'] = df["Deposit"].replace('-','0',inplace=False)
     df['Deposit'] = df["Deposit"].replace(',','',inplace=False, regex=True)
-    df['Withdraw'] = pd.to_numeric(df['Withdraw'], errors="ignore")
-    df['Deposit'] = pd.to_numeric(df['Deposit'], errors="ignore")
-    df['Transaction Date'] = pd.to_datetime(df['Transaction Date'], format="%Y-%m-%d %H:%M:%S")
-    df['Transaction Date'] = df['Transaction Date'].dt.date
-    df['Transaction Date'] = pd.to_datetime(df['Transaction Date'], format="%Y-%m-%d")
+    df['Withdraw'] = pd.to_numeric(df['Withdraw'])
+    df['Deposit'] = pd.to_numeric(df['Deposit'])
+    df['Transaction Date'] = pd.to_datetime(df['Transaction Date'])
+    #df['Transaction Date'] = df['Transaction Date'].dt.date
+    #df['Transaction Date'] = pd.to_datetime(df['Transaction Date'], format="%Y-%m-%d")
     df.head()
 
     
