@@ -23,8 +23,8 @@ if uploaded_file is not None:
     df['Withdraw'] = df["Withdraw"].replace(',','',inplace=False, regex=True)
     df['Deposit'] = df["Deposit"].replace('-','0',inplace=False)
     df['Deposit'] = df["Deposit"].replace(',','',inplace=False, regex=True)
-    df['Withdraw'] = pd.to_numeric(df['Withdraw'])
-    df['Deposit'] = pd.to_numeric(df['Deposit'])
+    df['Withdraw'] = pd.to_numeric(df['Withdraw'], errors="ignore")
+    df['Deposit'] = pd.to_numeric(df['Deposit'], errors="ignore")
     df['Transaction Date'] = pd.to_datetime(df['Transaction Date'], format="%Y-%m-%d %H:%M:%S")
     df['Transaction Date'] = df['Transaction Date'].dt.date
     df['Transaction Date'] = pd.to_datetime(df['Transaction Date'], format="%Y-%m-%d")
@@ -56,12 +56,12 @@ if uploaded_file is not None:
     st.bar_chart(data=df_earned)
     
     st.markdown("MONTHLY SPENDING")
-    df2=df_trans.groupby(pd.Grouper(key='Transaction Date', freq='1ME')).sum()
+    df2=df_trans.groupby(pd.Grouper(key='Transaction Date', freq='1M')).sum()
     st.write(df2)
     st.bar_chart(data=df2)
 
     st.markdown("MONTHLY AVG SPENDING")
-    df4=date_sums.groupby(pd.Grouper(key='Transaction Date', freq='1ME')).mean()
+    df4=date_sums.groupby(pd.Grouper(key='Transaction Date', freq='1M')).mean()
     st.write(df4)
     st.bar_chart(data=df4)
 
