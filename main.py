@@ -56,12 +56,12 @@ if uploaded_file is not None:
     st.bar_chart(data=df_earned)
     
     st.markdown("MONTHLY SPENDING")
-    df2=df_trans.groupby(pd.Grouper(key='Transaction Date', freq='1M')).sum()
+    df2=df_trans.groupby(pd.Grouper(key='Transaction Date', freq='1ME')).sum()
     st.write(df2)
     st.bar_chart(data=df2)
 
     st.markdown("MONTHLY AVG SPENDING")
-    df4=date_sums.groupby(pd.Grouper(key='Transaction Date', freq='1M')).mean()
+    df4=date_sums.groupby(pd.Grouper(key='Transaction Date', freq='1ME')).mean()
     st.write(df4)
     st.bar_chart(data=df4)
 
