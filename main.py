@@ -36,22 +36,22 @@ if uploaded_file is not None:
     #df['Value Date'] = pd.to_datetime(df['Value Date'], format="%Y-%m-%d")
 
     
-    df = df[(df['Withdraw'] < 100000)] 
+    df = df[(df['Withdraw'] < 20000)] 
     df = df[(df['Deposit'] < 100000)]
     st.markdown("Record size after removing transactions more than 1 lakh: " + str(df.shape))
     #df = df.drop(['S.N'], axis=1)
     df['Day'] = df['Value Date'].dt.day_name()
     
     
-    st.markdown("TOP 10 DAYS WHERE YOU SPENT THE MOST")
-    df_spent = df.sort_values(by='Withdraw', ascending=False).head(10)
+    st.markdown("TOP 20 TRANS WHERE YOU SPENT THE MOST")
+    df_spent = df.sort_values(by='Withdraw', ascending=False).head(20)
     st.write(df_spent)
     df_spent_index = df_spent.set_index('Value Date')['Withdraw']
 
     st.bar_chart(data=df_spent_index)
     
-    st.markdown("TOP 10 DAYS WHERE YOU EARNED THE MOST")
-    df_earned =  df.sort_values(by='Deposit', ascending=False).head(10) 
+    st.markdown("TOP 20 TRANS WHERE YOU EARNED THE MOST")
+    df_earned =  df.sort_values(by='Deposit', ascending=False).head(20) 
     st.write(df_earned)
     df_earned_index = df_earned.set_index('Value Date')['Deposit']
     st.bar_chart(data=df_earned_index)
