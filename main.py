@@ -12,7 +12,6 @@ if uploaded_file is not None:
     dfs = tb.read_pdf(uploaded_file, pages='all', multiple_tables = True, columns=[27.0,68.0,272.0,357.5,397.0,474.5,553.0,631.0])
     df = pd.concat(dfs)
     df = df.dropna()
-    df = df.head(60)
 
     st.title('Statement Analysis')
     st.markdown("Record size:")
@@ -27,47 +26,70 @@ if uploaded_file is not None:
     df['Withdraw'] = pd.to_numeric(df['Withdraw'])
     df['Deposit'] = pd.to_numeric(df['Deposit'])
     df['Transaction Date'] = pd.to_datetime(df['Transaction Date'])
+
+    st.write(df['Transaction Date'].dtype)
+    
     #df['Transaction Date'] = df['Transaction Date'].dt.date
     #df['Transaction Date'] = pd.to_datetime(df['Transaction Date'], format="%Y-%m-%d")
-    df.head()
 
     
-    df = df[(df['Withdraw'] < 1000000)] 
+    df = df[(df['Withdraw'] < 100000)] 
     df = df[(df['Deposit'] < 1000000)]
-    st.write(df.head(1))
-    st.write(df.tail(1))
     df = df.drop(['S.N'], axis=1)
     df['Day'] = df['Transaction Date'].dt.day_name()
-    df_trans = df.groupby(["Transaction Date"] , as_index=False).sum()
     
-    
-    st.markdown("Statistical Overview")
-    date_sums = df.groupby(["Transaction Date"] , as_index=False).sum()
-    st.dataframe(date_sums.describe())
     
     st.markdown("TOP 10 DAYS WHERE YOU SPENT THE MOST")
-    st.write(df_trans.nlargest(10, 'Withdraw'))
-    df_spent = df_trans.nlargest(10, 'Withdraw').set_index('Transaction Date')['Withdraw']
+    df_spent = df.sort_values(by='Withdraw', ascending=False).head(10)
+    st.write(df_spent)
+    df_spent_index = df_spent.set_index('Transaction Date')['Withdraw']
 
-    st.bar_chart(data=df_spent)
+    st.bar_chart(data=df_spent_index)
     
     st.markdown("TOP 10 DAYS WHERE YOU EARNED THE MOST")
-    st.write(df_trans.nlargest(10, 'Deposit'))
-    df_earned = df_trans.nlargest(10, 'Withdraw').set_index('Transaction Date')['Withdraw']
-    st.bar_chart(data=df_earned)
+    df_earned =  df.sort_values(by='Deposit', ascending=False).head(10) 
+    st.write(df_earned)
+    df_earned_index = df_earned.set_index('Transaction Date')['Deposit']
+    st.bar_chart(data=df_earned_index)
     
-    st.markdown("MONTHLY SPENDING")
-    df2=df_trans.groupby(pd.Grouper(key='Transaction Date', freq='1M')).sum()
-    st.write(df2)
-    st.bar_chart(data=df2)
-
-    st.markdown("MONTHLY AVG SPENDING")
-    df4=date_sums.groupby(pd.Grouper(key='Transaction Date', freq='1M')).mean()
-    st.write(df4)
-    st.bar_chart(data=df4)
-
-    st.markdown("EARN VS SPENDING WITH RESPECT TO DAYS")
-    df3=df[['Day', 'Withdraw', 'Deposit']].groupby('Day').sum()
-    st.write(df3)
-    st.bar_chart(data=df3)
+    st.markdown("MONTHLY EARNING VS SPENDING")
     
+    df['Month'] = df['Transaction Date'].dt.month_name()
+    df['Year'] = df['Transaction Date'].dt.year.astype(str)
+    
+    df['Year-Month'] = df['Year'].astype(str) + '-' + df['Month'].astype(str)
+
+    # Set this new column as the index
+    df.set_index('Year-Month', inplace=True)
+
+    # Drop the now redundant 'Year' and 'Month' columns if you wish (optional)
+    df.drop(['Year', 'Month'], axis=1, inplace=True)
+
+    
+    monthly_expenses = df.groupby('Year-Month')['Withdraw'].sum()
+    monthly_income = df.groupby('Year-Month')['Deposit'].sum()
+
+    st.write(monthly_expenses)
+    st.write(monthly_income)
+    # Combine monthly_expenses and monthly_income into a single DataFrame
+    monthly_finances = pd.DataFrame({
+        'Withdrawls': monthly_expenses,
+        'Deposits': monthly_income
+    }).reset_index()
+
+    # Now, plot with Streamlit
+    st.bar_chart(monthly_finances.set_index('Year-Month'))
+   # st.markdown("MONTHLY AVG SPENDING")
+   # df_monthly_total = df.groupby(['Year-Month'])[['Withdraw']].sum()
+   # df_monthly_spend = df_monthly_total['Withdraw'].mean()
+    #st.write(df_monthly_spend)
+    #st.bar_chart(data=df_monthly_spend)
+
+    # st.markdown("EARN VS SPENDING WITH RESPECT TO DAYS")
+    # df3=df[['Day', 'Withdraw', 'Deposit']].groupby('Day').sum()
+    # st.write(df3)
+    # st.bar_chart(data=df3)
+    
+    st.markdown("Saving Rate")
+    saving_rate = ((monthly_income - monthly_expenses) / monthly_income) * 100
+    st.write(saving_rate)
