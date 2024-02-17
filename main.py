@@ -43,8 +43,8 @@ if uploaded_file is not None:
     df['Day'] = df['Value Date'].dt.day_name()
     
     
-    st.markdown("TOP 20 TRANS WHERE YOU SPENT THE MOST")
-    df_spent = df.sort_values(by='Withdraw', ascending=False).head(20)
+    st.markdown("TOP 50 TRANS WHERE YOU SPENT THE MOST")
+    df_spent = df.sort_values(by='Withdraw', ascending=False).head(50)
     st.write(df_spent)
     df_spent_index = df_spent.set_index('Value Date')['Withdraw']
 
