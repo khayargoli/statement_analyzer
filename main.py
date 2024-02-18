@@ -56,7 +56,7 @@ if uploaded_file is not None:
     df_earned_index = df_earned.set_index('Value Date')['Deposit']
     st.bar_chart(data=df_earned_index)
     
-    st.markdown("MONTHLY SPENDING VS EARNING")
+    st.markdown("MONTHLY SPENDING / EARNING / SAVINGS")
     
     df['Month'] = df['Value Date'].dt.month_name()
     df['Year'] = df['Value Date'].dt.year.astype(str)
@@ -72,17 +72,19 @@ if uploaded_file is not None:
     
     monthly_expenses = df.groupby('Year-Month')['Withdraw'].sum()
     monthly_income = df.groupby('Year-Month')['Deposit'].sum()
+    monthly_savings = monthly_income - monthly_expenses
 
-    st.write(monthly_expenses)
-    st.write(monthly_income)
+  
+    
     # Combine monthly_expenses and monthly_income into a single DataFrame
     monthly_finances = pd.DataFrame({
         'Withdrawls': monthly_expenses,
-        'Deposits': monthly_income
+        'Deposits': monthly_income,
+        'Savings': monthly_savings
     }).reset_index()
-
+    st.write(monthly_finances)
     # Now, plot with Streamlit
-    st.bar_chart(monthly_finances.set_index('Year-Month'))
+    st.line_chart(monthly_finances.set_index('Year-Month'))
    # st.markdown("MONTHLY AVG SPENDING")
    # df_monthly_total = df.groupby(['Year-Month'])[['Withdraw']].sum()
    # df_monthly_spend = df_monthly_total['Withdraw'].mean()
@@ -95,19 +97,24 @@ if uploaded_file is not None:
     # st.bar_chart(data=df3)
     
     
-    st.markdown("Monthly Saving & Saving Rate")
-    monthly_savings = monthly_income - monthly_expenses
-    st.write(monthly_savings)
+    st.markdown(" Saving Rate")
+   
+    
 
     saving_rate = (monthly_savings / monthly_income) * 100
     st.write(saving_rate)
 
-    savings_target = st.number_input('Enter target earning')
+    savings_target = st.number_input('Enter earning target')
    
-    if st.button('Calculate time'):
+    if st.button('Calculate Time'):
         savings_target = float(savings_target)
         average_monthly_savings = monthly_savings.mean()
         months_to_target = savings_target / average_monthly_savings
-        st.markdown("### Time to Reach Savings Target")
-        st.write(f"Months to reach savings target: {months_to_target:.2f} months")
+        st.markdown("### Time to Reach Earning Target")
+        #st.write(f"Months to reach savings target: {months_to_target:.2f} months")
+        years = months_to_target // 12
+        remaining_months = months_to_target % 12  # Using modulo operator to find the remainder
+
+        st.write(f"{years:.0f} years and {remaining_months:.0f} months.")
+
     
