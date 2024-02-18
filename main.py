@@ -43,20 +43,20 @@ if uploaded_file is not None:
     df['Day'] = df['Value Date'].dt.day_name()
     
     
-    st.markdown("TOP 50 TRANS WHERE YOU SPENT THE MOST")
-    df_spent = df.sort_values(by='Withdraw', ascending=False).head(50)
+    st.markdown("TOP 30 TRANS WHERE YOU SPENT THE MOST")
+    df_spent = df.sort_values(by='Withdraw', ascending=False).head(30)
     st.write(df_spent)
     df_spent_index = df_spent.set_index('Value Date')['Withdraw']
 
     st.bar_chart(data=df_spent_index)
     
-    st.markdown("TOP 20 TRANS WHERE YOU EARNED THE MOST")
-    df_earned =  df.sort_values(by='Deposit', ascending=False).head(20) 
+    st.markdown("TOP 30 TRANS WHERE YOU EARNED THE MOST")
+    df_earned =  df.sort_values(by='Deposit', ascending=False).head(30) 
     st.write(df_earned)
     df_earned_index = df_earned.set_index('Value Date')['Deposit']
     st.bar_chart(data=df_earned_index)
     
-    st.markdown("MONTHLY EARNING VS SPENDING")
+    st.markdown("MONTHLY SPENDING VS EARNING")
     
     df['Month'] = df['Value Date'].dt.month_name()
     df['Year'] = df['Value Date'].dt.year.astype(str)
@@ -94,6 +94,20 @@ if uploaded_file is not None:
     # st.write(df3)
     # st.bar_chart(data=df3)
     
-    st.markdown("Saving Rate")
-    saving_rate = ((monthly_income - monthly_expenses) / monthly_income) * 100
+    
+    st.markdown("Monthly Saving & Saving Rate")
+    monthly_savings = monthly_income - monthly_expenses
+    st.write(monthly_savings)
+
+    saving_rate = (monthly_savings / monthly_income) * 100
     st.write(saving_rate)
+
+    savings_target = st.number_input('Enter target earning')
+   
+    if st.button('Calculate time'):
+        savings_target = float(savings_target)
+        average_monthly_savings = monthly_savings.mean()
+        months_to_target = savings_target / average_monthly_savings
+        st.markdown("### Time to Reach Savings Target")
+        st.write(f"Months to reach savings target: {months_to_target:.2f} months")
+    
