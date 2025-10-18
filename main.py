@@ -67,6 +67,13 @@ if uploaded_file is not None:
 
     df_original = df.copy()
 
+    # Add Year-Month processing to df_original for forecasting
+    df_original["Month"] = df_original["Transaction Date"].dt.month_name()
+    df_original["Year"] = df_original["Transaction Date"].dt.year.astype(str)
+    df_original["Year-Month"] = (
+        df_original["Transaction Date"].dt.to_period("M").astype(str)
+    )
+
     df = df[(df["Debit"] < 20000)]
     df = df[(df["Credit"] < 180000)]
 
@@ -148,7 +155,17 @@ if uploaded_file is not None:
     st.markdown("##  SPENDING FORECASTS")
 
     # Prepare data for forecasting
-    df_forecast = df.copy()
+    df_forecast = df_original.copy()
+
+    # Apply the same filters as main analysis for realistic spending forecasts
+    df_forecast = df_forecast[(df_forecast["Debit"] < 20000)]
+
+    # Set Year-Month as the index (already created in df_original)
+    df_forecast.set_index("Year-Month", inplace=True)
+
+    # Drop the now redundant 'Year' and 'Month' columns if you wish (optional)
+    df_forecast.drop(["Year", "Month"], axis=1, inplace=True)
+
     df_forecast["Date"] = df_forecast["Transaction Date"].dt.date
     daily_spending = df_forecast.groupby("Date")["Debit"].sum().reset_index()
     daily_spending["Date"] = pd.to_datetime(daily_spending["Date"])
@@ -222,6 +239,10 @@ if uploaded_file is not None:
     ax3.set_ylabel("Daily Spending (Rs. )")
     ax3.legend()
     ax3.grid(True, alpha=0.3)
+
+    # Format y-axis to show values in thousands
+    ax3.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f"{x/1000:.0f}k"))
+
     plt.xticks(rotation=45)
     plt.tight_layout()
     st.pyplot(fig3)
@@ -325,6 +346,10 @@ if uploaded_file is not None:
     ax4.set_ylabel("Monthly Spending (Rs. )")
     ax4.legend()
     ax4.grid(True, alpha=0.3)
+
+    # Format y-axis to show values in thousands
+    ax4.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f"{x/1000:.0f}k"))
+
     plt.xticks(rotation=45)
     plt.tight_layout()
     st.pyplot(fig4)
@@ -396,9 +421,19 @@ if uploaded_file is not None:
         )
 
     # Add checkbox to exclude investments
-    exclude_investments = st.checkbox(
-        "Exclude Investments (Debit < Rs. 20,000)", value=False
-    )
+    exclude_investments = st.checkbox("Exclude Investments", value=False)
+
+    # Add threshold input that appears when checkbox is checked
+    investment_threshold = 20000  # default value
+    if exclude_investments:
+        investment_threshold = st.number_input(
+            "Exclude Transactions Above (Rs.)",
+            min_value=1000,
+            max_value=100000,
+            value=20000,
+            step=1000,
+            help="Transactions above this amount will be considered investments and excluded",
+        )
 
     # Filter data based on selected date range
     if start_date <= end_date:
@@ -413,7 +448,7 @@ if uploaded_file is not None:
         # Apply investment exclusion filter if checkbox is checked
         if exclude_investments:
             filtered_df_original = filtered_df_original[
-                filtered_df_original["Debit"] < 20000
+                filtered_df_original["Debit"] < investment_threshold
             ]
 
         if not filtered_df_original.empty:
