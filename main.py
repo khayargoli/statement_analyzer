@@ -65,6 +65,8 @@ if uploaded_file is not None:
     df_spent_high = df_spent_high.reset_index(drop=True)
     st.write(df_spent_high[display_columns])
 
+    df_original = df.copy()
+
     df = df[(df["Debit"] < 20000)]
     df = df[(df["Credit"] < 180000)]
 
@@ -369,8 +371,8 @@ if uploaded_file is not None:
     st.markdown("## 📅 CUSTOM DATE RANGE SPENDING ANALYSIS")
 
     # Get the date range from the original data
-    min_date = df["Transaction Date"].min().date()
-    max_date = df["Transaction Date"].max().date()
+    min_date = df_original["Transaction Date"].min().date()
+    max_date = df_original["Transaction Date"].max().date()
 
     # Create date range selector
     col1, col2 = st.columns(2)
@@ -400,23 +402,25 @@ if uploaded_file is not None:
 
     # Filter data based on selected date range
     if start_date <= end_date:
-        filtered_df = df[
-            (df["Transaction Date"].dt.date >= start_date)
-            & (df["Transaction Date"].dt.date <= end_date)
+        filtered_df_original = df_original[
+            (df_original["Transaction Date"].dt.date >= start_date)
+            & (df_original["Transaction Date"].dt.date <= end_date)
         ].copy()
 
         # Filter out credit transactions (debit = 0) - only show actual spending
-        filtered_df = filtered_df[filtered_df["Debit"] > 0]
+        filtered_df_original = filtered_df_original[filtered_df_original["Debit"] > 0]
 
         # Apply investment exclusion filter if checkbox is checked
         if exclude_investments:
-            filtered_df = filtered_df[filtered_df["Debit"] < 20000]
+            filtered_df_original = filtered_df_original[
+                filtered_df_original["Debit"] < 20000
+            ]
 
-        if not filtered_df.empty:
+        if not filtered_df_original.empty:
 
             # All spending transactions in the selected period
             st.markdown("### All Spending Transactions")
-            all_spending_filtered = filtered_df[display_columns].sort_values(
+            all_spending_filtered = filtered_df_original[display_columns].sort_values(
                 "Debit", ascending=False
             )
             st.write(all_spending_filtered)
@@ -424,9 +428,9 @@ if uploaded_file is not None:
             st.markdown(f"### Spending Analysis:")
 
             # Calculate total spending in the selected period
-            total_spending = filtered_df["Debit"].sum()
+            total_spending = filtered_df_original["Debit"].sum()
             avg_daily_spending = total_spending / len(
-                filtered_df["Transaction Date"].dt.date.unique()
+                filtered_df_original["Transaction Date"].dt.date.unique()
             )
 
             # Display key metrics
@@ -444,7 +448,9 @@ if uploaded_file is not None:
 
             # Daily spending trend for the selected period
             daily_spending_filtered = (
-                filtered_df.groupby(filtered_df["Transaction Date"].dt.date)["Debit"]
+                filtered_df_original.groupby(
+                    filtered_df_original["Transaction Date"].dt.date
+                )["Debit"]
                 .sum()
                 .reset_index()
             )
@@ -455,11 +461,11 @@ if uploaded_file is not None:
                 st.markdown("### Spending Pattern Analysis")
 
                 # Day of week analysis
-                filtered_df["Day_of_Week"] = filtered_df[
+                filtered_df_original["Day_of_Week"] = filtered_df_original[
                     "Transaction Date"
                 ].dt.day_name()
                 weekly_spending = (
-                    filtered_df.groupby("Day_of_Week")["Debit"]
+                    filtered_df_original.groupby("Day_of_Week")["Debit"]
                     .sum()
                     .sort_values(ascending=False)
                 )
@@ -485,9 +491,9 @@ if uploaded_file is not None:
 
                     for min_val, max_val, label in spending_ranges:
                         count = len(
-                            filtered_df[
-                                (filtered_df["Debit"] >= min_val)
-                                & (filtered_df["Debit"] < max_val)
+                            filtered_df_original[
+                                (filtered_df_original["Debit"] >= min_val)
+                                & (filtered_df_original["Debit"] < max_val)
                             ]
                         )
                         range_counts.append(count)
