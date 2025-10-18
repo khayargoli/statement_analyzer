@@ -141,7 +141,7 @@ if uploaded_file is not None:
 
         st.write(f"{years:.0f} years and {remaining_months:.0f} months.")
 
-    # ===== NEW FEATURES =====
+    # ===== NEW FEATURES ======
 
     st.markdown("##  SPENDING FORECASTS")
 
