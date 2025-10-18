@@ -148,9 +148,9 @@ if uploaded_file is not None:
     st.markdown("##  SPENDING FORECASTS")
 
     # Prepare data for forecasting
-    df_forecast = df.copy()
-    df_forecast["Date"] = df_forecast["Transaction Date"].dt.date
-    daily_spending = df_forecast.groupby("Date")["Debit"].sum().reset_index()
+    df_original_forecast = df_original.copy()
+    df_original_forecast["Date"] = df_original_forecast["Transaction Date"].dt.date
+    daily_spending = df_original_forecast.groupby("Date")["Debit"].sum().reset_index()
     daily_spending["Date"] = pd.to_datetime(daily_spending["Date"])
     daily_spending = daily_spending.set_index("Date").sort_index()
 
@@ -230,45 +230,48 @@ if uploaded_file is not None:
     st.markdown("### Monthly Spending Forecast")
 
     # Calculate monthly spending trends
-    monthly_spending = df_forecast.groupby(
-        df_forecast["Transaction Date"].dt.to_period("M")
+    monthly_spending = df_original_forecast.groupby(
+        df_original_forecast["Transaction Date"].dt.to_period("M")
     )["Debit"].sum()
     monthly_spending.index = monthly_spending.index.to_timestamp()
 
     # Simple linear trend for monthly forecast
-    monthly_df = pd.DataFrame(
+    monthly_df_original = pd.DataFrame(
         {"Date": monthly_spending.index, "Spending": monthly_spending.values}
     )
-    monthly_df["Month_Number"] = range(len(monthly_df))
+    monthly_df_original["Month_Number"] = range(len(monthly_df_original))
 
     # Use multiple forecasting methods and take the best approach
     from sklearn.linear_model import LinearRegression
 
-    X = monthly_df[["Month_Number"]]
-    y = monthly_df["Spending"]
+    X = monthly_df_original[["Month_Number"]]
+    y = monthly_df_original["Spending"]
 
     # Method 1: Linear regression
     model = LinearRegression()
     model.fit(X, y)
 
     # Method 2: Simple moving average (last 3 months)
-    recent_avg = monthly_df["Spending"].tail(3).mean()
+    recent_avg = monthly_df_original["Spending"].tail(3).mean()
 
     # Method 3: Exponential smoothing (simple)
-    if len(monthly_df) >= 2:
+    if len(monthly_df_original) >= 2:
         alpha = 0.3  # Smoothing factor
-        exp_smooth = monthly_df["Spending"].iloc[0]
-        for i in range(1, len(monthly_df)):
+        exp_smooth = monthly_df_original["Spending"].iloc[0]
+        for i in range(1, len(monthly_df_original)):
             exp_smooth = (
-                alpha * monthly_df["Spending"].iloc[i] + (1 - alpha) * exp_smooth
+                alpha * monthly_df_original["Spending"].iloc[i]
+                + (1 - alpha) * exp_smooth
             )
     else:
-        exp_smooth = monthly_df["Spending"].mean()
+        exp_smooth = monthly_df_original["Spending"].mean()
 
     # Forecast next 6 months using the best method
-    future_months = range(len(monthly_df), len(monthly_df) + 6)
+    future_months = range(len(monthly_df_original), len(monthly_df_original) + 6)
     future_dates = pd.date_range(
-        start=monthly_df["Date"].max() + pd.DateOffset(months=1), periods=6, freq="M"
+        start=monthly_df_original["Date"].max() + pd.DateOffset(months=1),
+        periods=6,
+        freq="M",
     )
 
     # Linear regression predictions
@@ -295,8 +298,8 @@ if uploaded_file is not None:
     fig4, ax4 = plt.subplots(figsize=(12, 6))
 
     ax4.plot(
-        monthly_df["Date"],
-        monthly_df["Spending"],
+        monthly_df_original["Date"],
+        monthly_df_original["Spending"],
         marker="o",
         label="Actual Monthly Spending",
         linewidth=2,
@@ -357,7 +360,7 @@ if uploaded_file is not None:
 
     with col3:
         # Calculate spending trend
-        recent_avg = monthly_df["Spending"].tail(3).mean()
+        recent_avg = monthly_df_original["Spending"].tail(3).mean()
         forecast_avg = forecast_monthly["Forecasted_Spending"].mean()
         trend_pct = ((forecast_avg - recent_avg) / recent_avg) * 100
         st.metric("Spending Trend", f"{trend_pct:+.1f}%")
