@@ -405,6 +405,9 @@ if uploaded_file is not None:
             & (df["Transaction Date"].dt.date <= end_date)
         ].copy()
 
+        # Filter out credit transactions (debit = 0) - only show actual spending
+        filtered_df = filtered_df[filtered_df["Debit"] > 0]
+
         # Apply investment exclusion filter if checkbox is checked
         if exclude_investments:
             filtered_df = filtered_df[filtered_df["Debit"] < 20000]
