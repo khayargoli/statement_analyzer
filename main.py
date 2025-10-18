@@ -251,8 +251,8 @@ if uploaded_file is not None:
     st.markdown("### Monthly Spending Forecast")
 
     # Calculate monthly spending trends
-    monthly_spending = df_original_forecast.groupby(
-        df_original_forecast["Transaction Date"].dt.to_period("M")
+    monthly_spending = df_forecast.groupby(
+        df_forecast["Transaction Date"].dt.to_period("M")
     )["Debit"].sum()
     monthly_spending.index = monthly_spending.index.to_timestamp()
 
