@@ -32,7 +32,7 @@ if uploaded_file is not None:
     st.markdown("Record size:")
     st.write(df.shape)
     st.markdown(
-        "Anaylyzing statement from: "
+        "Analyzing Statement From: "
         + df.head(1)["Transaction Date"].values[0].split(" ")[0]
         + " to "
         + df.tail(1)["Transaction Date"].values[0].split(" ")[0]
@@ -217,7 +217,7 @@ if uploaded_file is not None:
 
     ax3.set_title("Spending Forecast (Next 30 Days)")
     ax3.set_xlabel("Date")
-    ax3.set_ylabel("Daily Spending (₹)")
+    ax3.set_ylabel("Daily Spending (Rs. )")
     ax3.legend()
     ax3.grid(True, alpha=0.3)
     plt.xticks(rotation=45)
@@ -315,12 +315,12 @@ if uploaded_file is not None:
         color="green",
         linestyle=":",
         alpha=0.7,
-        label=f"Recent 3-Month Avg (₹{recent_avg:.0f})",
+        label=f"Recent 3-Month Avg (Rs. {recent_avg:.0f})",
     )
 
     ax4.set_title("Monthly Spending Forecast (Next 6 Months)")
     ax4.set_xlabel("Date")
-    ax4.set_ylabel("Monthly Spending (₹)")
+    ax4.set_ylabel("Monthly Spending (Rs. )")
     ax4.legend()
     ax4.grid(True, alpha=0.3)
     plt.xticks(rotation=45)
@@ -329,8 +329,10 @@ if uploaded_file is not None:
 
     # Add forecast method explanation
     st.markdown("#### Forecast Method")
-    st.write(f"**Recent 3-Month Average**: ₹{recent_avg:.0f}")
-    st.write(f"**Linear Trend Prediction**: ₹{linear_predictions[0]:.0f} (next month)")
+    st.write(f"**Recent 3-Month Average**: Rs. {recent_avg:.0f}")
+    st.write(
+        f"**Linear Trend Prediction**: Rs. {linear_predictions[0]:.0f} (next month)"
+    )
     st.write(
         f"**Final Forecast**: Weighted average ensuring realistic values (no negative predictions)"
     )
@@ -340,14 +342,15 @@ if uploaded_file is not None:
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.metric("Next 30 Days (Daily Avg)", f"₹{last_ma30:.0f}")
-        st.metric("Next 30 Days (Total)", f"₹{last_ma30 * 30:.0f}")
+        st.metric("Next 30 Days (Daily Avg)", f"Rs. {last_ma30:.0f}")
+        st.metric("Next 30 Days (Total)", f"Rs. {last_ma30 * 30:.0f}")
 
     with col2:
         next_month_forecast = forecast_monthly.iloc[0]["Forecasted_Spending"]
-        st.metric("Next Month Forecast", f"₹{next_month_forecast:.0f}")
+        st.metric("Next Month Forecast", f"Rs. {next_month_forecast:.0f}")
         st.metric(
-            "6-Month Average", f"₹{forecast_monthly['Forecasted_Spending'].mean():.0f}"
+            "6-Month Average",
+            f"Rs. {forecast_monthly['Forecasted_Spending'].mean():.0f}",
         )
 
     with col3:
@@ -359,7 +362,7 @@ if uploaded_file is not None:
 
         # Spending volatility
         volatility = daily_spending["Debit"].std()
-        st.metric("Daily Volatility", f"₹{volatility:.0f}")
+        st.metric("Daily Volatility", f"Rs. {volatility:.0f}")
 
     # ===== NEW SECTION: DATE RANGE FILTERED SPENDING ANALYSIS =====
 
@@ -390,6 +393,11 @@ if uploaded_file is not None:
             key="end_date_filter",
         )
 
+    # Add checkbox to exclude investments
+    exclude_investments = st.checkbox(
+        "Exclude Investments (Debit < Rs. 20,000)", value=False
+    )
+
     # Filter data based on selected date range
     if start_date <= end_date:
         filtered_df = df[
@@ -397,8 +405,20 @@ if uploaded_file is not None:
             & (df["Transaction Date"].dt.date <= end_date)
         ].copy()
 
+        # Apply investment exclusion filter if checkbox is checked
+        if exclude_investments:
+            filtered_df = filtered_df[filtered_df["Debit"] < 20000]
+
         if not filtered_df.empty:
-            st.markdown(f"### Spending Analysis: {start_date} to {end_date}")
+
+            # All spending transactions in the selected period
+            st.markdown("### All Spending Transactions")
+            all_spending_filtered = filtered_df[display_columns].sort_values(
+                "Debit", ascending=False
+            )
+            st.write(all_spending_filtered)
+
+            st.markdown(f"### Spending Analysis:")
 
             # Calculate total spending in the selected period
             total_spending = filtered_df["Debit"].sum()
@@ -410,19 +430,14 @@ if uploaded_file is not None:
             col1, col2, col3 = st.columns(3)
 
             with col1:
-                st.metric("Total Spending", f"₹{total_spending:,.0f}")
+                st.metric("Total Spending", f"Rs. {total_spending:,.0f}")
 
             with col2:
-                st.metric("Average Daily Spending", f"₹{avg_daily_spending:,.0f}")
+                st.metric("Average Daily Spending", f"Rs. {avg_daily_spending:,.0f}")
 
             with col3:
                 days_in_period = (end_date - start_date).days + 1
                 st.metric("Days in Period", f"{days_in_period}")
-
-            # Top spending transactions in the selected period
-            st.markdown("### Top Spending Transactions")
-            top_spending_filtered = filtered_df.nlargest(20, "Debit")[display_columns]
-            st.write(top_spending_filtered)
 
             # Daily spending trend for the selected period
             daily_spending_filtered = (
@@ -433,10 +448,6 @@ if uploaded_file is not None:
             daily_spending_filtered.columns = ["Date", "Daily_Spending"]
 
             if len(daily_spending_filtered) > 1:
-                st.markdown("### Daily Spending Trend")
-                daily_spending_chart = daily_spending_filtered.set_index("Date")
-                st.line_chart(daily_spending_chart)
-
                 # Spending pattern analysis
                 st.markdown("### Spending Pattern Analysis")
 
@@ -459,11 +470,11 @@ if uploaded_file is not None:
                 with col2:
                     # Spending distribution
                     spending_ranges = [
-                        (0, 1000, "₹0 - ₹1,000"),
-                        (1000, 5000, "₹1,000 - ₹5,000"),
-                        (5000, 10000, "₹5,000 - ₹10,000"),
-                        (10000, 20000, "₹10,000 - ₹20,000"),
-                        (20000, float("inf"), "Above ₹20,000"),
+                        (0, 1000, "Rs. 0 - Rs. 1,000"),
+                        (1000, 5000, "Rs. 1,000 - Rs. 5,000"),
+                        (5000, 10000, "Rs. 5,000 - Rs. 10,000"),
+                        (10000, 20000, "Rs. 10,000 - Rs. 20,000"),
+                        (20000, float("inf"), "Above Rs. 20,000"),
                     ]
 
                     range_counts = []
@@ -501,15 +512,15 @@ if uploaded_file is not None:
 
             with col1:
                 st.info(
-                    f"**Highest Spending Day**: {highest_spending_day['Date']} (₹{highest_spending_day['Daily_Spending']:,.0f})"
+                    f"**Highest Spending Day**: {highest_spending_day['Date']} (Rs. {highest_spending_day['Daily_Spending']:,.0f})"
                 )
                 st.info(
-                    f"**Lowest Spending Day**: {lowest_spending_day['Date']} (₹{lowest_spending_day['Daily_Spending']:,.0f})"
+                    f"**Lowest Spending Day**: {lowest_spending_day['Date']} (Rs. {lowest_spending_day['Daily_Spending']:,.0f})"
                 )
 
             with col2:
                 spending_variance = daily_spending_filtered["Daily_Spending"].std()
-                st.info(f"**Spending Variance**: ₹{spending_variance:,.0f}")
+                st.info(f"**Spending Variance**: Rs. {spending_variance:,.0f}")
 
                 if len(daily_spending_filtered) > 0:
                     zero_spending_days = len(
