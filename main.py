@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tabula as tb
 from sklearn.linear_model import LinearRegression
+import altair as alt
 
 pd.pandas.set_option("display.max_rows", None)
 pd.pandas.set_option("display.max_columns", None)
@@ -75,15 +76,47 @@ if uploaded_file is not None:
     )
 
     df = df[(df["Debit"] < 20000)]
-    df = df[(df["Credit"] < 180000)]
+    df = df[(df["Credit"] < 200000)]
 
     st.markdown("TOP 30 TRANS WHERE YOU SPENT THE MOST (LESS THAN 20 thousand rupees)")
     df_spent = df.sort_values(by=["Debit", "Date"], ascending=[False, False]).head(30)
     df_spent = df_spent.reset_index(drop=True)
     st.write(df_spent[display_columns])
-    df_spent_index = df_spent.set_index("Date")["Debit"]
 
-    st.bar_chart(data=df_spent_index)
+    # Prepare data for stacked bar chart using Altair (Streamlit's native charting)
+    df_spent = df_spent.copy()
+    df_spent = df_spent.sort_values(by=["Date", "Debit"], ascending=[True, False])
+
+    # Add transaction number for each date to create unique identifiers
+    df_spent["Trans_Num"] = df_spent.groupby("Date").cumcount() + 1
+    df_spent["Transaction_ID"] = (
+        df_spent["Date"].astype(str) + " - Trans #" + df_spent["Trans_Num"].astype(str)
+    )
+
+    # Create stacked bar chart using Altair
+    chart = (
+        alt.Chart(df_spent)
+        .mark_bar()
+        .encode(
+            x=alt.X(
+                "Date:T", title="Date", axis=alt.Axis(format="%Y-%m-%d", labelAngle=-45)
+            ),
+            y=alt.Y("Debit:Q", title="Spending (Rs.)", stack="zero"),
+            color=alt.Color(
+                "Transaction_ID:N",
+                scale=alt.Scale(scheme="category20"),
+                legend=None,
+            ),
+            tooltip=["Date:T", "Transaction_ID:N", "Debit:Q"],
+        )
+        .properties(
+            width=800,
+            height=400,
+            title="Top 30 Transactions - Stacked by Date (Different Colors per Transaction)",
+        )
+    )
+
+    st.altair_chart(chart, use_container_width=True)
 
     st.markdown("TOP 30 TRANS WHERE YOU EARNED THE MOST")
     df_earned = df.sort_values(by="Credit", ascending=False).head(30)
@@ -570,11 +603,9 @@ if uploaded_file is not None:
                 st.info(f"**Spending Variance**: Rs. {spending_variance:,.0f}")
 
                 if len(daily_spending_filtered) > 0:
-                    zero_spending_days = len(
-                        daily_spending_filtered[
-                            daily_spending_filtered["Daily_Spending"] == 0
-                        ]
-                    )
+                    days_in_period = (end_date - start_date).days + 1
+                    days_with_spending = len(daily_spending_filtered)
+                    zero_spending_days = days_in_period - days_with_spending
                     st.info(f"**Zero Spending Days**: {zero_spending_days}")
 
         else:
