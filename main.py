@@ -11,23 +11,29 @@ pd.pandas.set_option("display.max_columns", None)
 
 uploaded_file = st.file_uploader("Choose a file")
 if uploaded_file is not None:
-    dfs = tb.read_pdf(uploaded_file, pages="all", multiple_tables=True)
+    dfs = tb.read_pdf(uploaded_file, pages="all", multiple_tables=True, lattice=True)
     df = pd.concat(dfs)
     df = df.reset_index(drop=True)
-    st.write("Raw data:")
-    st.write(df.head(20))
+    st.write("Raw data first 2 and last 2 rows:")
+    st.write(df.head(2))
+    st.write(df.tail(2))
 
     # Show column names to debug
     st.write("Column names:")
     st.write(df.columns.tolist())
+
+    # Keep only the required columns
+    required_columns = ["Transaction Date", "Description", "Debit", "Credit", "Balance"]
+    existing_columns = [col for col in required_columns if col in df.columns]
+    df = df[existing_columns]
 
     # Drop rows where Transaction Date is null or empty
     df = df.dropna(subset=["Transaction Date"])
     df = df[df["Transaction Date"] != ""]
     df = df[df["Transaction Date"].notna()]
 
-    st.write("After filtering:")
-    st.write(df.head(20))
+    st.write("After filtering records with no date:")
+    st.write(df.head(5))
 
     st.title("Statement Analysis")
     st.markdown("Record size:")
@@ -211,8 +217,22 @@ if uploaded_file is not None:
     daily_spending["MA_14"] = daily_spending["Debit"].rolling(window=14).mean()
     daily_spending["MA_30"] = daily_spending["Debit"].rolling(window=30).mean()
 
-    # Forecast next 30 days using 30-day moving average
-    last_ma30 = daily_spending["MA_30"].dropna().iloc[-1]
+    # Forecast next 30 days using 30-day moving average (with fallback for insufficient data)
+    ma30_dropped = daily_spending["MA_30"].dropna()
+    if len(ma30_dropped) > 0:
+        last_ma30 = ma30_dropped.iloc[-1]
+    else:
+        # Fallback to shorter moving averages or mean if insufficient data
+        ma14_dropped = daily_spending["MA_14"].dropna()
+        if len(ma14_dropped) > 0:
+            last_ma30 = ma14_dropped.iloc[-1]
+        else:
+            ma7_dropped = daily_spending["MA_7"].dropna()
+            if len(ma7_dropped) > 0:
+                last_ma30 = ma7_dropped.iloc[-1]
+            else:
+                # Use mean of all available data as last resort
+                last_ma30 = daily_spending["Debit"].mean()
     forecast_dates = pd.date_range(
         start=daily_spending.index.max() + pd.Timedelta(days=1), periods=30, freq="D"
     )
