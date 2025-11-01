@@ -89,9 +89,7 @@ if uploaded_file is not None:
 
     # Add transaction number for each date to create unique identifiers
     df_spent["Trans_Num"] = df_spent.groupby("Date").cumcount() + 1
-    df_spent["Transaction_ID"] = (
-        df_spent["Date"].astype(str) + " - Trans #" + df_spent["Trans_Num"].astype(str)
-    )
+    df_spent["Transaction_ID"] = df_spent["Description"]
 
     # Create stacked bar chart using Altair
     chart = (
@@ -108,11 +106,6 @@ if uploaded_file is not None:
                 legend=None,
             ),
             tooltip=["Date:T", "Transaction_ID:N", "Debit:Q"],
-        )
-        .properties(
-            width=800,
-            height=400,
-            title="Top 30 Transactions - Stacked by Date (Different Colors per Transaction)",
         )
     )
 
