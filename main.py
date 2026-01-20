@@ -440,6 +440,49 @@ if uploaded_file is not None:
         volatility = daily_spending["Debit"].std()
         st.metric("Daily Volatility", f"Rs. {volatility:.0f}")
 
+    # ===== NEW SECTION: SEARCH RECORDS BY DESCRIPTION =====
+
+    st.markdown("## 🔍 SEARCH RECORDS BY DESCRIPTION")
+
+    # Search input
+    search_term = st.text_input(
+        "Enter search term to filter by Description",
+        value="",
+        help="Search is case-insensitive and matches partial descriptions",
+        key="description_search",
+    )
+
+    if search_term:
+        # Filter records where Description contains the search term (case-insensitive)
+        search_results = df_original[
+            df_original["Description"].str.contains(search_term, case=False, na=False)
+        ].copy()
+
+        if not search_results.empty:
+            # Display search results
+            st.markdown(f"### Search Results ({len(search_results)} records found)")
+
+            # Sort by date (most recent first)
+            search_results_display = search_results[display_columns].sort_values(
+                "Date", ascending=False
+            )
+            search_results_display = search_results_display.reset_index(drop=True)
+            st.write(search_results_display)
+
+            # Show date range of search results
+            if len(search_results) > 0:
+                min_result_date = search_results["Date"].min()
+                max_result_date = search_results["Date"].max()
+                st.info(
+                    f"**Date Range**: {min_result_date} to {max_result_date} "
+                    f"({(max_result_date - min_result_date).days + 1} days)"
+                )
+        else:
+            st.warning(f"No records found matching '{search_term}' in Description column.")
+
+    else:
+        st.info("Enter a search term above to filter records by description.")
+
     # ===== NEW SECTION: DATE RANGE FILTERED SPENDING ANALYSIS =====
 
     st.markdown("## 📅 CUSTOM DATE RANGE SPENDING ANALYSIS")
