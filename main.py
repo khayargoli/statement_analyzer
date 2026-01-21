@@ -70,7 +70,25 @@ if uploaded_file is not None:
         by=["Debit", "Date"], ascending=[False, False]
     ).head(30)
     df_spent_high = df_spent_high.reset_index(drop=True)
-    st.write(df_spent_high[display_columns])
+    
+    # Create a total row for Debit and Credit columns
+    df_display_high = df_spent_high[display_columns].copy()
+    total_row_high = {}
+    for col in display_columns:
+        if col == "Debit":
+            total_row_high[col] = df_display_high["Debit"].sum()
+        elif col == "Credit":
+            total_row_high[col] = df_display_high["Credit"].sum()
+        elif col == "Date":
+            total_row_high[col] = "TOTAL"
+        elif col == "Description":
+            total_row_high[col] = "TOTAL"
+        else:
+            total_row_high[col] = None
+    
+    # Append total row to the DataFrame
+    df_display_high = pd.concat([df_display_high, pd.DataFrame([total_row_high])], ignore_index=True)
+    st.write(df_display_high)
 
     df_original = df.copy()
 
@@ -87,7 +105,25 @@ if uploaded_file is not None:
     st.markdown("TOP 30 TRANS WHERE YOU SPENT THE MOST (LESS THAN 20 thousand rupees)")
     df_spent = df.sort_values(by=["Debit", "Date"], ascending=[False, False]).head(30)
     df_spent = df_spent.reset_index(drop=True)
-    st.write(df_spent[display_columns])
+    
+    # Create a total row for Debit and Credit columns
+    df_display = df_spent[display_columns].copy()
+    total_row = {}
+    for col in display_columns:
+        if col == "Debit":
+            total_row[col] = df_display["Debit"].sum()
+        elif col == "Credit":
+            total_row[col] = df_display["Credit"].sum()
+        elif col == "Date":
+            total_row[col] = "TOTAL"
+        elif col == "Description":
+            total_row[col] = "TOTAL"
+        else:
+            total_row[col] = None
+    
+    # Append total row to the DataFrame
+    df_display = pd.concat([df_display, pd.DataFrame([total_row])], ignore_index=True)
+    st.write(df_display)
 
     # Prepare data for stacked bar chart using Altair (Streamlit's native charting)
     df_spent = df_spent.copy()
@@ -119,7 +155,25 @@ if uploaded_file is not None:
 
     st.markdown("TOP 30 TRANS WHERE YOU EARNED THE MOST")
     df_earned = df.sort_values(by="Credit", ascending=False).head(30)
-    st.write(df_earned[display_columns])
+    
+    # Create a total row for Debit and Credit columns
+    df_display_earned = df_earned[display_columns].copy()
+    total_row_earned = {}
+    for col in display_columns:
+        if col == "Debit":
+            total_row_earned[col] = df_display_earned["Debit"].sum()
+        elif col == "Credit":
+            total_row_earned[col] = df_display_earned["Credit"].sum()
+        elif col == "Date":
+            total_row_earned[col] = "TOTAL"
+        elif col == "Description":
+            total_row_earned[col] = "TOTAL"
+        else:
+            total_row_earned[col] = None
+    
+    # Append total row to the DataFrame
+    df_display_earned = pd.concat([df_display_earned, pd.DataFrame([total_row_earned])], ignore_index=True)
+    st.write(df_display_earned)
     df_earned_index = df_earned.set_index("Date")["Credit"]
     st.bar_chart(data=df_earned_index)
 
@@ -550,7 +604,25 @@ if uploaded_file is not None:
             all_spending_filtered = filtered_df_original[display_columns].sort_values(
                 "Debit", ascending=False
             )
-            st.write(all_spending_filtered)
+            
+            # Create a total row for Debit and Credit columns
+            df_display_filtered = all_spending_filtered.copy()
+            total_row_filtered = {}
+            for col in display_columns:
+                if col == "Debit":
+                    total_row_filtered[col] = df_display_filtered["Debit"].sum()
+                elif col == "Credit":
+                    total_row_filtered[col] = df_display_filtered["Credit"].sum()
+                elif col == "Date":
+                    total_row_filtered[col] = "TOTAL"
+                elif col == "Description":
+                    total_row_filtered[col] = "TOTAL"
+                else:
+                    total_row_filtered[col] = None
+            
+            # Append total row to the DataFrame
+            df_display_filtered = pd.concat([df_display_filtered, pd.DataFrame([total_row_filtered])], ignore_index=True)
+            st.write(df_display_filtered)
 
             st.markdown(f"### Spending Analysis:")
 
